@@ -2,7 +2,7 @@ package balancers
 
 import (
 	"hash/fnv"
-	"load-balancer/internal"
+	"load-balancer/internal/service"
 	"net/http"
 	"net/url"
 )
@@ -17,7 +17,7 @@ func NewIPHashBalancer(backends []*url.URL) *IpHashBalancer {
 
 func (ip *IpHashBalancer) NextBackend(r *http.Request) (*url.URL, error) {
 	if len(ip.backends) == 0 {
-		return nil, internal.ErrNoAvailableBackends
+		return nil, service.ErrNoAvailableBackends
 	}
 	clientIP := r.RemoteAddr
 	hash := fnv.New32a()

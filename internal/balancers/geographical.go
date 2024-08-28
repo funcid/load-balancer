@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"load-balancer/internal"
+	"load-balancer/internal/service"
 	"math"
 	"net"
 	"net/http"
@@ -86,7 +86,7 @@ func Haversine(lat1, lon1, lat2, lon2 float64) float64 {
 
 func (gb *GeographicalBalancer) NextBackend(r *http.Request) (*url.URL, error) {
 	if len(gb.servers) == 0 {
-		return nil, internal.ErrNoAvailableBackends
+		return nil, service.ErrNoAvailableBackends
 	}
 
 	clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
@@ -114,7 +114,7 @@ func (gb *GeographicalBalancer) NextBackend(r *http.Request) (*url.URL, error) {
 	}
 
 	if closestServer == nil {
-		return nil, internal.ErrNoAvailableBackends
+		return nil, service.ErrNoAvailableBackends
 	}
 
 	return closestServer.URL, nil

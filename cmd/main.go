@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"load-balancer/internal"
 	"load-balancer/internal/factory"
 	"load-balancer/internal/service"
 	"log"
@@ -25,7 +24,7 @@ func main() {
 
 	balancerFactory := factory.NewBalancerFactory()
 	balancer := balancerFactory.CreateBalancer(*balancerType, servers)
-	lb := internal.NewLoadBalancer(balancer)
+	lb := service.NewLoadBalancer(balancer)
 
 	go service.StartServer(8081)
 	go service.StartServer(8082)

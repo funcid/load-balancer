@@ -1,7 +1,7 @@
 package balancers
 
 import (
-	"load-balancer/internal"
+	"load-balancer/internal/service"
 	"net/http"
 	"net/url"
 	"sync"
@@ -22,7 +22,7 @@ func NewLeastActiveBalancer(backends []*url.URL) *LeastActiveBalancer {
 
 func (la *LeastActiveBalancer) NextBackend(*http.Request) (*url.URL, error) {
 	if len(la.backends) == 0 {
-		return nil, internal.ErrNoAvailableBackends
+		return nil, service.ErrNoAvailableBackends
 	}
 
 	la.mu.Lock()

@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"load-balancer/internal"
 	"load-balancer/internal/balancers"
+	"load-balancer/internal/service"
 	"log"
 	"net/url"
 )
@@ -13,7 +13,7 @@ func NewBalancerFactory() *BalancerFactory {
 	return &BalancerFactory{}
 }
 
-func (f *BalancerFactory) CreateBalancer(balancerType string, servers []string) internal.Balancer {
+func (f *BalancerFactory) CreateBalancer(balancerType string, servers []string) service.Balancer {
 	var backends []*url.URL
 	for _, server := range servers {
 		u, err := url.Parse(server)
@@ -23,7 +23,7 @@ func (f *BalancerFactory) CreateBalancer(balancerType string, servers []string) 
 		backends = append(backends, u)
 	}
 
-	var balancer internal.Balancer
+	var balancer service.Balancer
 
 	switch balancerType {
 	case "roundrobin":
