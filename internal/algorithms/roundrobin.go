@@ -1,7 +1,7 @@
-package balancers
+package algorithms
 
 import (
-	"load-balancer/internal/service"
+	"load-balancer/internal/balancing"
 	"net/http"
 	"net/url"
 	"sync/atomic"
@@ -18,7 +18,7 @@ func NewRoundRobinBalancer(backends []*url.URL) *RoundRobinBalancer {
 
 func (rr *RoundRobinBalancer) NextBackend(*http.Request) (*url.URL, error) {
 	if len(rr.backends) == 0 {
-		return nil, service.ErrNoAvailableBackends
+		return nil, balancing.ErrNoAvailableBackends
 	}
 	next := atomic.AddUint64(&rr.count, 1)
 	return rr.backends[next%uint64(len(rr.backends))], nil

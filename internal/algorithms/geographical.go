@@ -1,11 +1,11 @@
-package balancers
+package algorithms
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"load-balancer/internal/service"
+	"load-balancer/internal/balancing"
 	"math"
 	"net"
 	"net/http"
@@ -86,7 +86,7 @@ func Haversine(lat1, lon1, lat2, lon2 float64) float64 {
 
 func (gb *GeographicalBalancer) NextBackend(r *http.Request) (*url.URL, error) {
 	if len(gb.servers) == 0 {
-		return nil, service.ErrNoAvailableBackends
+		return nil, balancing.ErrNoAvailableBackends
 	}
 
 	clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
@@ -114,7 +114,7 @@ func (gb *GeographicalBalancer) NextBackend(r *http.Request) (*url.URL, error) {
 	}
 
 	if closestServer == nil {
-		return nil, service.ErrNoAvailableBackends
+		return nil, balancing.ErrNoAvailableBackends
 	}
 
 	return closestServer.URL, nil

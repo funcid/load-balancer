@@ -1,7 +1,7 @@
-package balancers
+package algorithms
 
 import (
-	"load-balancer/internal/service"
+	"load-balancer/internal/balancing"
 	"net/http"
 	"net/url"
 	"sync"
@@ -22,7 +22,7 @@ func NewLeastConnectionsBalancer(backends []*url.URL) *LeastConnectionsBalancer 
 
 func (lc *LeastConnectionsBalancer) NextBackend(*http.Request) (*url.URL, error) {
 	if len(lc.backends) == 0 {
-		return nil, service.ErrNoAvailableBackends
+		return nil, balancing.ErrNoAvailableBackends
 	}
 
 	lc.mu.Lock()

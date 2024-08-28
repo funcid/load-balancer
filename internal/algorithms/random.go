@@ -1,7 +1,7 @@
-package balancers
+package algorithms
 
 import (
-	"load-balancer/internal/service"
+	"load-balancer/internal/balancing"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -17,7 +17,7 @@ func NewRandomBalancer(backends []*url.URL) *RandomBalancer {
 
 func (rb *RandomBalancer) NextBackend(*http.Request) (*url.URL, error) {
 	if len(rb.backends) == 0 {
-		return nil, service.ErrNoAvailableBackends
+		return nil, balancing.ErrNoAvailableBackends
 	}
 	index := rand.Intn(len(rb.backends))
 	return rb.backends[index], nil

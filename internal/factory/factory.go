@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"load-balancer/internal/balancers"
-	"load-balancer/internal/service"
+	"load-balancer/internal/algorithms"
+	"load-balancer/internal/balancing"
 	"log"
 	"net/url"
 )
@@ -13,7 +13,7 @@ func NewBalancerFactory() *BalancerFactory {
 	return &BalancerFactory{}
 }
 
-func (f *BalancerFactory) CreateBalancer(balancerType string, servers []string) service.Balancer {
+func (f *BalancerFactory) CreateBalancer(balancerType string, servers []string) balancing.Balancer {
 	var backends []*url.URL
 	for _, server := range servers {
 		u, err := url.Parse(server)
@@ -23,22 +23,22 @@ func (f *BalancerFactory) CreateBalancer(balancerType string, servers []string) 
 		backends = append(backends, u)
 	}
 
-	var balancer service.Balancer
+	var balancer balancing.Balancer
 
 	switch balancerType {
 	case "roundrobin":
-		balancer = balancers.NewRoundRobinBalancer(backends)
+		balancer = algorithms.NewRoundRobinBalancer(backends)
 	case "iphash":
-		balancer = balancers.NewIPHashBalancer(backends)
+		balancer = algorithms.NewIPHashBalancer(backends)
 	case "leastactive":
-		balancer = balancers.NewLeastActiveBalancer(backends)
+		balancer = algorithms.NewLeastActiveBalancer(backends)
 	case "leastconnections":
-		balancer = balancers.NewLeastConnectionsBalancer(backends)
+		balancer = algorithms.NewLeastConnectionsBalancer(backends)
 	case "random":
-		balancer = balancers.NewRandomBalancer(backends)
+		balancer = algorithms.NewRandomBalancer(backends)
 	case "geographical":
-		balancer = balancers.NewGeographicalBalancer(
-			[]balancers.GeoServer{
+		balancer = algorithms.NewGeographicalBalancer(
+			[]algorithms.GeoServer{
 				{URL: backends[0], Latitude: 37.7749, Longitude: -122.4194}, // San Francisco
 				{URL: backends[1], Latitude: 40.7128, Longitude: -74.0060},  // New York
 				{URL: backends[2], Latitude: 51.5074, Longitude: -0.1278},   // London
