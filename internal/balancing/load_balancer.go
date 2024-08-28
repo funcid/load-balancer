@@ -1,8 +1,7 @@
 package balancing
 
 import (
-	"net/http"
-	"net/http/httputil"
+	"github.com/valyala/fasthttp"
 )
 
 type LoadBalancer struct {
@@ -13,35 +12,37 @@ func NewLoadBalancer(balancer Balancer) *LoadBalancer {
 	return &LoadBalancer{balancer: balancer}
 }
 
-func (lb *LoadBalancer) HandleRequest(w http.ResponseWriter, r *http.Request) {
-	backend, err := lb.balancer.NextBackend(r)
+func (lb *LoadBalancer) HandleRequest(ctx *fasthttp.RequestCtx) {
+	backend, err := lb.balancer.NextBackend(ctx)
 	if err != nil {
-		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
+		ctx.Error("Service Unavailable", fasthttp.StatusServiceUnavailable)
 		return
 	}
 
-	proxy := httputil.NewSingleHostReverseProxy(backend)
+	// Это URL бэкенда, к которому будем проксировать запрос
+	backendURL := backend.String()
 
-	if releasableBalancer, ok := lb.balancer.(ReleasableBalancer); ok {
-		// Обработчик ошибок прокси-сервера для уменьшения счетчика
-		proxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, err error) {
-			releasableBalancer.ReleaseBackend(backend)
-			http.Error(rw, "Bad Gateway", http.StatusBadGateway)
-		}
-
-		r.URL.Host = backend.Host
-		r.URL.Scheme = backend.Scheme
-		r.Host = backend.Host
-
-		proxy.ServeHTTP(w, r)
-
-		// Освобождаем соединение после успешного завершения
-		releasableBalancer.ReleaseBackend(backend)
-	} else {
-		r.URL.Host = backend.Host
-		r.URL.Scheme = backend.Scheme
-		r.Host = backend.Host
-
-		proxy.ServeHTTP(w, r)
+	// Создаем клиент для отправки запросов к бэкенду
+	client := &fasthttp.HostClient{
+		Addr: backend.Host,
 	}
+
+	if backend.Scheme == "https" {
+		client.IsTLS = true
+	}
+
+	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseRequest(req)
+	defer fasthttp.ReleaseResponse(resp)
+
+	ctx.Request.CopyTo(req)
+	req.SetRequestURI(backendURL)
+
+	if err := client.Do(req, resp); err != nil {
+		ctx.Error("Bad Gateway", fasthttp.StatusBadGateway)
+		return
+	}
+
+	resp.CopyTo(&ctx.Response)
 }

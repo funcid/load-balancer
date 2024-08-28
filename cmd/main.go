@@ -2,11 +2,11 @@ package main
 
 import (
 	"flag"
+	"github.com/valyala/fasthttp"
 	"load-balancer/internal/balancing"
 	"load-balancer/internal/factory"
 	"load-balancer/internal/service"
 	"log"
-	"net/http"
 )
 
 func main() {
@@ -23,15 +23,20 @@ func main() {
 		"http://localhost:8083",
 	}
 
+	// Создаем фабрику для создания балансировщика
 	balancerFactory := factory.NewBalancerFactory()
 	balancer := balancerFactory.CreateBalancer(*balancerType, servers)
 	lb := balancing.NewLoadBalancer(balancer)
 
+	// Запускаем серверы
 	go service.StartServer(8081)
 	go service.StartServer(8082)
 	go service.StartServer(8083)
 
 	log.Println("Starting Load Balancer at :8080")
-	http.HandleFunc("/", lb.HandleRequest)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	// Запускаем сервер балансировщика с использованием fasthttp
+	log.Fatal(fasthttp.ListenAndServe(":8080", func(ctx *fasthttp.RequestCtx) {
+		lb.HandleRequest(ctx)
+	}))
 }

@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
+	"github.com/valyala/fasthttp"
 	"load-balancer/internal/balancing"
 	"math"
 	"net"
-	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -36,13 +35,21 @@ func (gb *GeographicalBalancer) GetCoordinates(ip string) (float64, float64, err
 		return 0, 0, errors.New("GEO_API_KEY environment variable not set")
 	}
 
-	resp, err := http.Get(fmt.Sprintf("https://api.ipgeolocation.io/ipgeo?apiKey=%s&ip=%s", apiKey, ip))
+	// Создание запроса
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+	req.SetRequestURI(fmt.Sprintf("https://api.ipgeolocation.io/ipgeo?apiKey=%s&ip=%s", apiKey, ip))
+
+	// Получение ответа
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+
+	err := fasthttp.Do(req, resp)
 	if err != nil {
 		return 0, 0, err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode() != fasthttp.StatusOK {
 		return 0, 0, errors.New("failed to get geolocation info")
 	}
 
@@ -51,12 +58,7 @@ func (gb *GeographicalBalancer) GetCoordinates(ip string) (float64, float64, err
 		Longitude string `json:"longitude"`
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	if err = json.Unmarshal(body, &result); err != nil {
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
 		return 0, 0, err
 	}
 
@@ -84,12 +86,12 @@ func Haversine(lat1, lon1, lat2, lon2 float64) float64 {
 	return R * c
 }
 
-func (gb *GeographicalBalancer) NextBackend(r *http.Request) (*url.URL, error) {
+func (gb *GeographicalBalancer) NextBackend(ctx *fasthttp.RequestCtx) (*url.URL, error) {
 	if len(gb.servers) == 0 {
 		return nil, balancing.ErrNoAvailableBackends
 	}
 
-	clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
+	clientIP, _, err := net.SplitHostPort(ctx.RemoteAddr().String())
 	if err != nil {
 		return nil, err
 	}

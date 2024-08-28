@@ -1,8 +1,8 @@
 package algorithms
 
 import (
+	"github.com/valyala/fasthttp"
 	"load-balancer/internal/balancing"
-	"net/http"
 	"net/url"
 	"sync"
 )
@@ -20,7 +20,7 @@ func NewLeastConnectionsBalancer(backends []*url.URL) *LeastConnectionsBalancer 
 	}
 }
 
-func (lc *LeastConnectionsBalancer) NextBackend(*http.Request) (*url.URL, error) {
+func (lc *LeastConnectionsBalancer) NextBackend(*fasthttp.RequestCtx) (*url.URL, error) {
 	if len(lc.backends) == 0 {
 		return nil, balancing.ErrNoAvailableBackends
 	}

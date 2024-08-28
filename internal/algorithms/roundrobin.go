@@ -1,8 +1,8 @@
 package algorithms
 
 import (
+	"github.com/valyala/fasthttp"
 	"load-balancer/internal/balancing"
-	"net/http"
 	"net/url"
 	"sync/atomic"
 )
@@ -16,7 +16,7 @@ func NewRoundRobinBalancer(backends []*url.URL) *RoundRobinBalancer {
 	return &RoundRobinBalancer{backends: backends}
 }
 
-func (rr *RoundRobinBalancer) NextBackend(*http.Request) (*url.URL, error) {
+func (rr *RoundRobinBalancer) NextBackend(*fasthttp.RequestCtx) (*url.URL, error) {
 	if len(rr.backends) == 0 {
 		return nil, balancing.ErrNoAvailableBackends
 	}
