@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"load-balancer/internal/balancing"
 	"math"
 	"net"
@@ -51,7 +51,7 @@ func (gb *GeographicalBalancer) GetCoordinates(ip string) (float64, float64, err
 		Longitude string `json:"longitude"`
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return 0, 0, err
 	}
