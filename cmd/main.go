@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"github.com/valyala/fasthttp"
+	"load-balancer/internal/balancer_factory"
 	"load-balancer/internal/balancing"
-	"load-balancer/internal/factory"
 	"load-balancer/internal/service"
 	"log"
 )
@@ -23,9 +23,8 @@ func main() {
 		"http://localhost:8083",
 	}
 
-	// Создаем фабрику для создания балансировщика
-	balancerFactory := factory.NewBalancerFactory()
-	balancer := balancerFactory.CreateBalancer(*balancerType, servers)
+	// Используем фабрику для создания балансировщика
+	balancer := balancer_factory.CreateBalancer(*balancerType, servers)
 	lb := balancing.NewLoadBalancer(balancer)
 
 	// Запускаем серверы

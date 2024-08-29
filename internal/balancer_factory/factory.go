@@ -1,4 +1,4 @@
-package factory
+package balancer_factory
 
 import (
 	"load-balancer/internal/algorithms"
@@ -7,13 +7,7 @@ import (
 	"net/url"
 )
 
-type BalancerFactory struct{}
-
-func NewBalancerFactory() *BalancerFactory {
-	return &BalancerFactory{}
-}
-
-func (f *BalancerFactory) CreateBalancer(balancerType string, servers []string) balancing.Balancer {
+func CreateBalancer(balancerType string, servers []string) balancing.Balancer {
 	var backends []*url.URL
 	for _, server := range servers {
 		u, err := url.Parse(server)
